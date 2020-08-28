@@ -35,14 +35,9 @@ cd ..
 export PATH
 PATH=$(pwd)/depot_tools:$PATH
 
-# depot_tools only work in Python 2 and it uses "/usr/bin/env python", so
-# we take advantage of depot_tools being first in the PATH and create a
-# symlink to the happy Python if "python" is Python 3.
-PYV=$(python -c "import sys; print(sys.version_info[0]);")
-if [ "${PYV}" == "3" ]; then
-  echo "'/usr/bin/env python' is Python 3, so making symlink to python2"
-  ln -s /usr/bin/python2 $(pwd)/depot_tools/python
-fi
+# depot_tools only works if Python 2 is "python", but the python2 package
+# in buster installs it as /usr/bin/python2, so we link it.
+ln -s /usr/bin/python2 /usr/bin/python
 
 # Checkout and build Breakpad
 echo "PREFIX: ${PREFIX:=$(pwd)/build/breakpad}"
@@ -66,7 +61,7 @@ mkdir -p "${PREFIX}"
 rsync -a --exclude="*.git" ./src "${PREFIX}"/
 ./configure --prefix="${PREFIX}"
 make install
-if test -z "${SKIP_CHECK}"; then
+if [ -z "${SKIP_CHECK}" ]; then
   #FIXME: get this working again
   #make check
   true
@@ -77,6 +72,6 @@ cd ../..
 cp breakpad/src/src/third_party/libdisasm/libdisasm.a "${PREFIX}"/lib/
 
 # Optionally package everything up
-if test -z "${SKIP_TAR}"; then
+if [ -z "${SKIP_TAR}" ]; then
   tar -C "${PREFIX}"/.. -zcf breakpad.tar.gz "$(basename "${PREFIX}")"
 fi

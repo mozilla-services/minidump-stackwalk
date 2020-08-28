@@ -50,12 +50,12 @@ build: .env  ## | Build docker images.
 
 .PHONY: shell
 shell: .env .docker-build  ## | Open a shell in the app container.
-	${DC} run --rm app shell
+	${DC} run --rm app bash
 
 .PHONY: clean
 clean:  ## | Remove all build artifacts.
 	-rm .docker-build*
-	-rm -rf build breakpad stackwalk google-breakpad breakpad.tar.gz depot_tools
-	-rm -rf .cache
-	-rm -rf mdsw_venv
-	cd minidump-stackwalk && make clean
+	./bin/clean_artifacts.sh
+
+sizeof: .env .docker-build  ## | Size of minidump_stackwalker docker image.
+	docker images | grep minidump

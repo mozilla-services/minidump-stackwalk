@@ -18,7 +18,7 @@ SRCDIR="${SRCDIR:-$(pwd)}"
 cd "${SRCDIR}"
 
 # Build breakpad from source; takes about 2 minutes
-PREFIX="${SRCDIR}/breakpad/" SKIP_TAR=1 "${SRCDIR}/scripts/build-breakpad.sh"
+PREFIX="${SRCDIR}/breakpad/" SKIP_TAR=1 "${SRCDIR}/bin/build_breakpad.sh"
 
 # Copy breakpad bits into stackwalk/ to compile minidump-stackwalker
 rm -rf stackwalk || true

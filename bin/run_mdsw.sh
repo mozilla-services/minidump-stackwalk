@@ -9,7 +9,7 @@
 #
 # Usage:
 #
-#    app@socorro:/app$ ./scripts/run_mdsw.sh [CRASHID]
+#    app@socorro:/app$ ./bin/run_mdsw.sh [CRASHID]
 
 set -e
 

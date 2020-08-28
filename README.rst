@@ -62,12 +62,12 @@ in the app image in ``/stackwalk``.
 If you want to build them outside of Docker, you can use these two build
 scripts:
 
-* ``bin/build-breakpad.sh``
+* ``bin/build_breakpad.sh``
 
   This will build breakpad from source and place the resulting bits in
   ``./build/breakpad``.
 
-* ``bin/build-stackwalker.sh``
+* ``bin/build_stackwalker.sh``
 
   This will build stackwalker.
 
@@ -81,7 +81,7 @@ To get a shell to debug minidump-stackwalk, do::
 
 To run the build script, do::
 
-    app@socorro:/app$ ./bin/build-stackwalker.sh
+    app@socorro:/app$ ./bin/build_stackwalker.sh
 
 ``vim`` and ``gdb`` are available in the shell.
 
