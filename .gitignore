@@ -1,0 +1,24 @@
+# exclude config overrides to prevent accidental check-ins
+*.sw[po]
+*.log
+breakpad/
+breakpad.tar.gz
+depot_tools/
+stackwalk/
+exploitable/
+*~
+build
+.DS_Store
+minidump-stackwalk/*.o
+minidump-stackwalk/stackwalker
+minidump-stackwalk/dumplookup
+minidump-stackwalk/get-minidump-instructions
+minidump-stackwalk/jit-crash-categorize
+dist/
+
+# docker things
+.docker-build*
+.cache/
+docker-compose.override.yml
+.env
+mdsw_venv/

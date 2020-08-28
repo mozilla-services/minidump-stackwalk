@@ -1,0 +1,10 @@
+version: "2"
+services:
+  app:
+    build:
+      context: .
+    image: local/minidump_stackwalker
+    env_file:
+      - .env
+    volumes:
+      - .:/app
