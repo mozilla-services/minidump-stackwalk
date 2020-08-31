@@ -62,13 +62,13 @@ jobs:
             # push on main or git tag
             if [ "${CIRCLE_BRANCH}" == "main" ] || [ -n "${CIRCLE_TAG}" ]; then
               echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
-              retry docker tag "local/minidump_stackwalk:latest" "mozilla/minidump_stackwalk:${DOCKER_TAG}"
-              retry docker push "mozilla/minidump_stackwalk:${DOCKER_TAG}"
+              retry docker tag "local/socorro_minidump_stackwalk:latest" "mozilla/socorro_minidump_stackwalk:${DOCKER_TAG}"
+              retry docker push "mozilla/socorro_minidump_stackwalk:${DOCKER_TAG}"
 
               # push `latest` on main only
               if [ "${CIRCLE_BRANCH}" == "main" ]; then
-                retry docker tag "local/minidump_stackwalk:latest" "mozilla/minidump_stackwalk:latest"
-                retry docker push "mozilla/minidump_stackwalk:latest"
+                retry docker tag "local/socorro_minidump_stackwalk:latest" "mozilla/socorro_minidump_stackwalk:latest"
+                retry docker push "mozilla/socorro_minidump_stackwalk:latest"
               fi
             fi
 
