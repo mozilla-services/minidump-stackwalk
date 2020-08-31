@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-    image: local/socorro_minidump_stackwalk
+    image: local/socorro-minidump-stackwalk
     env_file:
       - .env
     volumes:
