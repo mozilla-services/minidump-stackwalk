@@ -1,0 +1,91 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: mozilla/cidockerbases:docker-latest
+    working_directory: /
+
+    steps:
+      - run:
+          name: Host info
+          command: uname -v
+
+      - run:
+          name: Install essential packages
+          command: apt-get install make
+
+      - checkout:
+          path: /mdsw
+
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run:
+          name: Get info
+          command: |
+            docker info
+            which docker-compose
+            docker-compose --version
+
+      - run:
+          name: Build Docker image
+          working_directory: /mdsw
+          command: |
+            make build
+
+      - run:
+          name: Push to Dockerhub
+          working_directory: /mdsw
+          command: |
+            function retry {
+              set +e
+              local n=0
+              local max=3
+              while true; do
+              "$@" && break || {
+                if [[ $n -lt $max ]]; then
+                  ((n++))
+                  echo "Command failed. Attempt $n/$max:"
+                else
+                  echo "Failed after $n attempts."
+                  exit 1
+                fi
+              }
+              done
+              set -e
+            }
+
+            export DOCKER_TAG="${CIRCLE_SHA1}"
+            if [ -n "${CIRCLE_TAG}" ]; then
+              export DOCKER_TAG="${CIRCLE_TAG}"
+            fi
+            # push on main or git tag
+            if [ "${CIRCLE_BRANCH}" == "main" ] || [ -n "${CIRCLE_TAG}" ]; then
+              echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
+              retry docker tag "local/minidump_stackwalk:latest" "mozilla/minidump_stackwalk:${DOCKER_TAG}"
+              retry docker push "mozilla/minidump_stackwalk:${DOCKER_TAG}"
+
+              # push `latest` on main only
+              if [ "${CIRCLE_BRANCH}" == "main" ]; then
+                retry docker tag "local/minidump_stackwalk:latest" "mozilla/minidump_stackwalk:latest"
+                retry docker push "mozilla/minidump_stackwalk:latest"
+              fi
+            fi
+
+workflows:
+  version: 2
+
+  # workflow jobs are _not_ run in tag builds by default
+  # we use filters to whitelist jobs that should be run for tags
+
+  # workflow jobs are run in _all_ branch builds by default
+  # we use filters to blacklist jobs that shouldn't be run for a branch
+
+  # see: https://circleci.com/docs/2.0/workflows/#git-tag-job-execution
+
+  build-test-push:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
