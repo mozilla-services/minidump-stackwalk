@@ -61,7 +61,7 @@ jobs:
             fi
             # push on main or git tag
             if [ "${CIRCLE_BRANCH}" == "main" ] || [ -n "${CIRCLE_TAG}" ]; then
-              echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_USERNAME}" --password-stdin
+              echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
               retry docker tag "local/socorro-minidump-stackwalk:latest" "mozilla/socorro-minidump-stackwalk:${DOCKER_TAG}"
               retry docker push "mozilla/socorro-minidump-stackwalk:${DOCKER_TAG}"
 
