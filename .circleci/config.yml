@@ -55,21 +55,17 @@ jobs:
               set -e
             }
 
-            export DOCKER_TAG="${CIRCLE_SHA1}"
+            # Push a tag and a latest if tagged
             if [ -n "${CIRCLE_TAG}" ]; then
-              export DOCKER_TAG="${CIRCLE_TAG}"
-            fi
-            # push on main or git tag
-            if [ "${CIRCLE_BRANCH}" == "main" ] || [ -n "${CIRCLE_TAG}" ]; then
               echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
-              retry docker tag "local/socorro-minidump-stackwalk:latest" "mozilla/socorro-minidump-stackwalk:${DOCKER_TAG}"
-              retry docker push "mozilla/socorro-minidump-stackwalk:${DOCKER_TAG}"
 
-              # push `latest` on main only
-              if [ "${CIRCLE_BRANCH}" == "main" ]; then
-                retry docker tag "local/socorro-minidump-stackwalk:latest" "mozilla/socorro-minidump-stackwalk:latest"
-                retry docker push "mozilla/socorro-minidump-stackwalk:latest"
-              fi
+              # Push tagged image
+              retry docker tag "local/socorro-minidump-stackwalk:latest" "mozilla/socorro-minidump-stackwalk:${CIRCLE_TAG}"
+              retry docker push "mozilla/socorro-minidump-stackwalk:${CIRCLE_TAG}"
+
+              # Push "latest" tag
+              retry docker tag "local/socorro-minidump-stackwalk:latest" "mozilla/socorro-minidump-stackwalk:latest"
+              retry docker push "mozilla/socorro-minidump-stackwalk:latest"
             fi
 
 workflows:
