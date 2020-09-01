@@ -90,3 +90,20 @@ Things to keep in mind:
 1. It's pretty rough and there might be issues--let us know.
 2. When you're done with the shell, it makes sense to run ``make clean`` to
    clean out any extra bits from minidump-stackwalk floating around.
+
+
+PGO profile
+===========
+
+This is clunky--sorry!
+
+To build a PGO profile:
+
+1. swap the ``PGOFLAGS`` lines to ``-fprofile-generate`` in
+   ``minidump-stackwalk/Makefile`` and ``bin/build-breakpad.sh``
+2. run ``make clean`` and ``make build``
+3. process 100 crash reports
+4. the profile should be in ``/app/pgo_profile/`` in the container and ``./pgo_profile/``
+   outside the container
+5. swap the ``PGOFLAGS`` lines back to ``-fprofile-use``
+6. commit profile to git

@@ -59,7 +59,15 @@ echo ">>> using breakpad version: $(git rev-parse HEAD)"
 
 mkdir -p "${PREFIX}"
 rsync -a --exclude="*.git" ./src "${PREFIX}"/
+
+# NOTE(willkg): Swap these when you're building a pgo profile
+export PGOFLAGS="-fprofile-use=/app/pgo_profile/"
+# export PGOFLAGS="-fprofile-generate=/app/pgo_profile/"
+
+# Configure breakpad for building
+export CXXFLAGS="-g -flto -O3 ${PGOFLAGS}"
 ./configure --prefix="${PREFIX}"
+
 make install
 if [ -z "${SKIP_CHECK}" ]; then
   #FIXME: get this working again
