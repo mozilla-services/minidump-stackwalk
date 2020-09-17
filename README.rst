@@ -6,6 +6,14 @@ This repo holds the stackwalker binaries that parse minidump files that Socorro
 uses.
 
 
+Docker image
+============
+
+Docker images with the breakpad and stackwalk binaries are at:
+
+https://hub.docker.com/r/mozilla/socorro-minidump-stackwalk
+
+
 Usage
 =====
 
