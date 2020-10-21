@@ -37,7 +37,9 @@ PATH=$(pwd)/depot_tools:$PATH
 
 # depot_tools only works if Python 2 is "python", but the python2 package
 # in buster installs it as /usr/bin/python2, so we link it.
-ln -s /usr/bin/python2 /usr/bin/python
+if [ ! -h /usr/bin/python ]; then
+    ln -s /usr/bin/python2 /usr/bin/python
+fi
 
 # Checkout and build Breakpad
 echo "PREFIX: ${PREFIX:=$(pwd)/build/breakpad}"
