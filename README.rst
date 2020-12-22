@@ -103,15 +103,5 @@ Things to keep in mind:
 PGO profile
 ===========
 
-This is clunky--sorry!
-
-To build a PGO profile:
-
-1. swap the ``PGOFLAGS`` lines to ``-fprofile-generate`` in
-   ``minidump-stackwalk/Makefile`` and ``bin/build-breakpad.sh``
-2. run ``make clean`` and ``make build``
-3. process 100 crash reports
-4. the profile should be in ``/app/pgo_profile/`` in the container and ``./pgo_profile/``
-   outside the container
-5. swap the ``PGOFLAGS`` lines back to ``-fprofile-use``
-6. commit profile to git
+By default both minidump-stackwalk and breakpad are built with PGO and an
+appropriate training set is included in the sources.

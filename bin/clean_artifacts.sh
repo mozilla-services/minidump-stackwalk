@@ -6,6 +6,9 @@
 
 # Delete build artifacts from building breakpad and minidump-stackwalker
 
+find pgo_data -name "*.extra" -exec rm -f {} \;
+find pgo_data -name "*.dmp" -exec rm -f {} \;
+find pgo_data -name "*.sym" -exec rm -f {} \;
 rm -rf build breakpad stackwalk google-breakpad breakpad.tar.gz depot_tools
 rm -rf .cache
 rm -rf mdsw_venv
