@@ -40,19 +40,16 @@ else
 CURL_LIBS := -lcurl
 endif
 
-# NOTE(willkg): Swap these when you're building a pgo profile
-PGOFLAGS="-fprofile-use=/app/pgo_profile/"
-# PGOFLAGS="-fprofile-generate=/app/pgo_profile/"
-
 CXXFLAGS += \
   -I$(BREAKPAD_SRCDIR) \
   -I$(JSON_INCLUDEDIR) \
   -D__STDC_FORMAT_MACROS=1 \
   -std=gnu++0x \
   -Wno-format \
+  -Wno-coverage-mismatch \
   -flto \
   -O3 \
-  ${PGOFLAGS} \
+  $(PGOFLAGS) \
   $(WERROR) \
   $(CURL_CFLAGS) \
   $(NULL)

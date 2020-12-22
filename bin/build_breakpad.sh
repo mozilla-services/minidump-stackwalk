@@ -15,13 +15,16 @@ set -v -e -x
 
 # Build the revision used in the snapshot unless otherwise specified.
 # Update this if you update the snapshot!
-: BREAKPAD_REV         "${BREAKPAD_REV:=216cea7bca53fa441a3ee0d0f5fd339a3a894224}"
+: BREAKPAD_REV         "${BREAKPAD_REV:=78f7ae495bc147e97a58e8158072fd35fdd99419}"
+
+# Locate the local patches
+BREAKPAD_PATCHES="$(pwd)/breakpad-patches"
 
 export MAKEFLAGS
 MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
 
 if [ ! -d "depot_tools" ]; then
-  git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+  git clone --depth=1 --single-branch https://chromium.googlesource.com/chromium/tools/depot_tools.git
 fi
 
 cd depot_tools || exit
@@ -54,23 +57,30 @@ else
 fi
 
 cd src
-git checkout "$BREAKPAD_REV"
+git checkout --force "$BREAKPAD_REV"
 gclient sync
 
 echo ">>> using breakpad version: $(git rev-parse HEAD)"
 
+pwd
+# Apply local patches
+for p in ${BREAKPAD_PATCHES}/*.patch; do
+    echo "Applying $p"
+    if ! cat $p | patch -p1; then
+      echo "Failed to apply $p"
+      exit 1
+    fi
+done
+
 mkdir -p "${PREFIX}"
 rsync -a --exclude="*.git" ./src "${PREFIX}"/
 
-# NOTE(willkg): Swap these when you're building a pgo profile
-export PGOFLAGS="-fprofile-use=/app/pgo_profile/"
-# export PGOFLAGS="-fprofile-generate=/app/pgo_profile/"
-
 # Configure breakpad for building
-export CXXFLAGS="-g -flto -O3 ${PGOFLAGS}"
-./configure --prefix="${PREFIX}"
+OPTFLAGS="-O3 -flto ${PGOFLAGS} -Wno-coverage-mismatch -Wno-missing-profile"
+CFLAGS="${OPTFLAGS}" CXXFLAGS="${OPTFLAGS}" ./configure --prefix="${PREFIX}" || grep "error:" config.log
 
-make install
+CPU_NUM=$(grep ^processor /proc/cpuinfo  | wc -l)
+make -j${CPU_NUM} install
 if [ -z "${SKIP_CHECK}" ]; then
   #FIXME: get this working again
   #make check
