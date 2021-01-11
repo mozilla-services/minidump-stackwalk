@@ -6,8 +6,7 @@
 
 # Build script for building Breakpad and stackwalker
 
-# Failures should cause setup to fail
-set -v -e -x
+set -euxo pipefail
 
 # Destination directory for the final stackwalker binaries
 STACKWALKDIR="${STACKWALKDIR:-$(pwd)/stackwalk}"

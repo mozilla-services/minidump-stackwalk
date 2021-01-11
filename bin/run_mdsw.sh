@@ -14,7 +14,7 @@
 #
 #    app@socorro:/app$ ./bin/run_mdsw.sh [CRASHID]
 
-set -e
+set -euxo pipefail
 
 DATADIR=./crashdata_mdsw_tmp
 OUTPUTDIR=./outdir
