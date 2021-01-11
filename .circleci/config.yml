@@ -1,3 +1,4 @@
+---
 version: 2.1
 jobs:
   build:
@@ -55,17 +56,23 @@ jobs:
               set -e
             }
 
-            # Push a tag and a latest if tagged
-            if [ -n "${CIRCLE_TAG}" ]; then
+            if [ "${DOCKER_USER}" == "" ] || [ "${DOCKER_PASS}" == "" ]; then
+              echo "Skipping Login to Dockerhub, credentials not available."
+            else
               echo "${DOCKER_PASS}" | docker login -u="${DOCKER_USER}" --password-stdin
 
-              # Push tagged image
-              retry docker tag "local/socorro-minidump-stackwalk:latest" "mozilla/socorro-minidump-stackwalk:${CIRCLE_TAG}"
-              retry docker push "mozilla/socorro-minidump-stackwalk:${CIRCLE_TAG}"
+              export LOCAL_IMAGE="local/socorro-minidump-stackwalk:latest"
+              export DOCKERHUB_REPO="mozilla/socorro-minidump-stackwalk"
 
-              # Push "latest" tag
-              retry docker tag "local/socorro-minidump-stackwalk:latest" "mozilla/socorro-minidump-stackwalk:latest"
-              retry docker push "mozilla/socorro-minidump-stackwalk:latest"
+              if [ "${CIRCLE_BRANCH}" == "main" ]; then
+                # Push "latest" tag for main branch
+                retry docker tag "${LOCAL_IMAGE}" "${DOCKERHUB_REPO}:latest"
+                retry docker push "${DOCKERHUB_REPO}:latest"
+              elif [ -n "${CIRCLE_TAG}" ]; then
+                # Push tagged image
+                retry docker tag "${LOCAL_IMAGE}" "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
+                retry docker push "${DOCKERHUB_REPO}:${CIRCLE_TAG}"
+              fi
             fi
 
 workflows:
