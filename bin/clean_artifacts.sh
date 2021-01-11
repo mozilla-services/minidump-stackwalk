@@ -6,6 +6,8 @@
 
 # Delete build artifacts from building breakpad and minidump-stackwalker
 
+set -euxo pipefail
+
 find pgo_data -name "*.extra" -exec rm -f {} \;
 find pgo_data -name "*.dmp" -exec rm -f {} \;
 find pgo_data -name "*.sym" -exec rm -f {} \;

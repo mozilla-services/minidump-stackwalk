@@ -10,8 +10,7 @@
 # run for local builds if necessary without assuming the Taskcluster
 # environment.
 
-# Failures in this script should cause the build to fail
-set -v -e -x
+set -euxo pipefail
 
 # Build the revision used in the snapshot unless otherwise specified.
 # Update this if you update the snapshot!
@@ -81,11 +80,10 @@ CFLAGS="${OPTFLAGS}" CXXFLAGS="${OPTFLAGS}" ./configure --prefix="${PREFIX}" || 
 
 CPU_NUM=$(grep ^processor /proc/cpuinfo  | wc -l)
 make -j${CPU_NUM} install
-if [ -z "${SKIP_CHECK}" ]; then
-  #FIXME: get this working again
-  #make check
-  true
-fi
+# if [ -z "${SKIP_CHECK}" ]; then
+#   #FIXME: get this working again
+#   make check
+# fi
 git rev-parse HEAD > "${PREFIX}"/revision.txt
 cd ../..
 
