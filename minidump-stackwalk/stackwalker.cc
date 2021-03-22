@@ -803,6 +803,10 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
     }
     thread["frames"] = stack;
     thread["frame_count"] = stack.size();
+    auto last_error_value = raw_stack->last_error();
+    if (last_error_value) {
+      thread["last_error_value"] = ToHex(last_error_value);
+    }
     auto thread_name = thread_id_name_map[raw_stack->tid()];
     if (!thread_name.empty()) {
       thread["thread_name"] = thread_name;
