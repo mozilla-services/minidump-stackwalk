@@ -815,14 +815,14 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
   }
   root["threads"] = threads;
 
-  // Put the first ten frames of the crashing thread in a separate field
-  // for ease of searching.
+  // Put the stack of the crashing thread in a separate field
+  // to make it easier to read the raw JSON.
   if (process_state.crashed() && requesting_thread != -1) {
     Json::Value crashing_thread;
     Json::Value stack;
     const CallStack *crashing_stack =
       process_state.threads()->at(requesting_thread);
-    ConvertStackToJSON(process_state, crashing_stack, stack, 10, true);
+    ConvertStackToJSON(process_state, crashing_stack, stack, 0, true);
 
     crashing_thread["threads_index"] = requesting_thread;
     crashing_thread["frames"] = stack;
