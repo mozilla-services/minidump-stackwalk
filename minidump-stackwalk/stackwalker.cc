@@ -709,6 +709,32 @@ int ConvertModulesToJSON(const ProcessState& process_state,
   return main_module_index;
 }
 
+static size_t ConvertUnloadedModulesToJSON(const ProcessState& aProcessState,
+                                           Json::Value& aNode) {
+  const CodeModules* unloadedModules = aProcessState.unloaded_modules();
+  if (!unloadedModules) {
+    return 0;
+  }
+
+  const size_t unloadedModulesLen = unloadedModules->module_count();
+  for (size_t i = 0; i < unloadedModulesLen; i++) {
+    const CodeModule* unloadedModule = unloadedModules->GetModuleAtIndex(i);
+
+    Json::Value unloadedModuleNode;
+    unloadedModuleNode["filename"] =
+        PathnameStripper::File(unloadedModule->code_file());
+    unloadedModuleNode["code_id"] =
+        PathnameStripper::File(unloadedModule->code_identifier());
+    unloadedModuleNode["base_addr"] = ToHex(unloadedModule->base_address());
+    unloadedModuleNode["end_addr"] =
+        ToHex(unloadedModule->base_address() + unloadedModule->size());
+
+    aNode.append(unloadedModuleNode);
+  }
+
+  return unloadedModulesLen;
+}
+
 static string ExploitabilityString(ExploitabilityRating exploitability) {
   string str;
   switch (exploitability) {
@@ -780,11 +806,20 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
   Json::Value modules(Json::arrayValue);
   int main_module = ConvertModulesToJSON(process_state, symbolizer,
                                          supplier, cert_info, modules);
-  if (main_module != -1)
+  if (main_module != -1) {
     root["main_module"] = main_module;
+  }
   root["modules"] = modules;
   if (!cert_info.empty()) {
     root["modules_contains_cert_info"] = true;
+  }
+
+  Json::Value unloaded_modules(Json::arrayValue);
+  size_t unloaded_modules_len =
+      ConvertUnloadedModulesToJSON(process_state, unloaded_modules);
+
+  if (unloaded_modules_len > 0) {
+    root["unloaded_modules"] = unloaded_modules;
   }
 
   auto thread_id_name_map = std::move(GetThreadIdNameMap(raw_root));
