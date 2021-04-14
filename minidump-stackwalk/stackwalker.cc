@@ -62,6 +62,7 @@
 #include "google_breakpad/processor/stack_frame_symbolizer.h"
 #include "processor/pathname_stripper.h"
 #include "processor/simple_symbol_supplier.h"
+#include "processor/symbolic_constants_win.h"
 
 #include "common.h"
 #include "http_symbol_supplier.h"
@@ -78,6 +79,7 @@ using google_breakpad::MinidumpMemoryInfoList;
 using google_breakpad::MinidumpMiscInfo;
 using google_breakpad::MinidumpModule;
 using google_breakpad::MinidumpProcessor;
+using google_breakpad::NTStatusToString;
 using google_breakpad::PathnameStripper;
 using google_breakpad::ProcessResult;
 using google_breakpad::ProcessState;
@@ -840,7 +842,7 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
     thread["frame_count"] = stack.size();
     auto last_error_value = raw_stack->last_error();
     if (last_error_value) {
-      thread["last_error_value"] = ToHex(last_error_value);
+      thread["last_error_value"] = NTStatusToString(last_error_value);
     }
     auto thread_name = thread_id_name_map[raw_stack->tid()];
     if (!thread_name.empty()) {
