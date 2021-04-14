@@ -22,3 +22,8 @@ dist/
 docker-compose.override.yml
 .env
 mdsw_venv/
+
+# PGO data
+pgo_data/minidumps/*.dmp
+pgo_data/minidumps/*.extra
+pgo_data/symbols/*/*/*.sym
