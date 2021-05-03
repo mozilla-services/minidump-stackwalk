@@ -99,6 +99,7 @@ using google_breakpad::Stackwalker;
 using google_breakpad::SymbolSupplier;
 using google_breakpad::SystemInfo;
 using breakpad_extra::HTTPSymbolSupplier;
+using google_breakpad::crash_info_record_t;
 
 using std::map;
 using std::string;
@@ -803,6 +804,47 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
   }
   root["crash_info"] = crash_info;
 
+  // Mac crash info
+  const crash_info_record_t* crash_info_records =
+    process_state.mac_crash_info_records();
+  unsigned int num_records =
+    process_state.mac_crash_info_records_count();
+  if (num_records) {
+    Json::Value mac_crash_info;
+    mac_crash_info["num_records"] = num_records;
+    Json::Value records(Json::arrayValue);
+    for (unsigned int i = 0; i < num_records; ++i) {
+      Json::Value record;
+      if (!crash_info_records[i].module_path.empty()) {
+        record["module"] = crash_info_records[i].module_path;
+      }
+      if (!crash_info_records[i].message.empty()) {
+        record["message"] = crash_info_records[i].message;
+      }
+      if (!crash_info_records[i].signature_string.empty()) {
+        record["signature_string"] = crash_info_records[i].signature_string;
+      }
+      if (!crash_info_records[i].backtrace.empty()) {
+        record["backtrace"] = crash_info_records[i].backtrace;
+      }
+      if (!crash_info_records[i].message2.empty()) {
+        record["message2"] = crash_info_records[i].message2;
+      }
+      if (crash_info_records[i].thread) {
+        record["thread"] = ToHex(crash_info_records[i].thread);
+      }
+      if (crash_info_records[i].dialog_mode) {
+        record["dialog_mode"] = ToHex(crash_info_records[i].dialog_mode);
+      }
+      if (crash_info_records[i].abort_cause) {
+        record["abort_cause"] = ToInt(crash_info_records[i].abort_cause);
+      }
+      records.append(record);
+    }
+    mac_crash_info["records"] = records;
+    root["mac_crash_info"] = mac_crash_info;
+  }
+
   ModuleCertMap cert_info = GetModuleCertMap(raw_root);
 
   Json::Value modules(Json::arrayValue);
@@ -1193,6 +1235,44 @@ static void PrintProcessStateMachineReadable(const ProcessState& process_state)
     printf("%d\n", requesting_thread);
   } else {
     printf("\n");
+  }
+
+  const crash_info_record_t* crash_info_records =
+    process_state.mac_crash_info_records();
+  size_t num_records =
+    process_state.mac_crash_info_records_count();
+  for (size_t i = 0; i < num_records; ++i) {
+    char thread_str[32];
+    if (crash_info_records[i].thread) {
+      snprintf(thread_str, sizeof(thread_str), "0x%llx",
+               crash_info_records[i].thread);
+    } else {
+      strncpy(thread_str, "0", sizeof(thread_str));
+    }
+    char dialog_mode_str[32];
+    if (crash_info_records[i].dialog_mode) {
+      snprintf(dialog_mode_str, sizeof(dialog_mode_str), "0x%x",
+               crash_info_records[i].dialog_mode);
+    } else {
+      strncpy(dialog_mode_str, "0", sizeof(dialog_mode_str));
+    }
+    char abort_cause_str[32];
+    if (crash_info_records[i].abort_cause) {
+      snprintf(abort_cause_str, sizeof(abort_cause_str), "%lld",
+               crash_info_records[i].abort_cause);
+    } else {
+      strncpy(abort_cause_str, "0", sizeof(abort_cause_str));
+    }
+    printf("MacCrashInfo%c%s%c%lu%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n",
+           kOutputSeparator, crash_info_records[i].module_path.c_str(),
+           kOutputSeparator, crash_info_records[i].version,
+           kOutputSeparator, crash_info_records[i].message.c_str(),
+           kOutputSeparator, crash_info_records[i].signature_string.c_str(),
+           kOutputSeparator, crash_info_records[i].backtrace.c_str(),
+           kOutputSeparator, crash_info_records[i].message2.c_str(),
+           kOutputSeparator, thread_str,
+           kOutputSeparator, dialog_mode_str,
+           kOutputSeparator, abort_cause_str);
   }
 
   PrintModulesMachineReadable(process_state.modules());
