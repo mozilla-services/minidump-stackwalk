@@ -135,8 +135,8 @@ Rough JSON output schema:
     },
     "crash_info": {
       "type": <string>,
-      "crash_address": <string>,             // 0x[[:xdigit:]]+, optional
-      "crashing_thread": <int>,              // thread index | null; optional
+      "address": <string>,                   // optional; 0x[[:xdigit:]]+
+      "crashing_thread": <int>,              // optional; thread index | null
       "assertion": <string>                  // optional
     }
     "largest_free_vm_block": <string>,       // 0x[[:xdigit:]]+
@@ -147,7 +147,7 @@ Rough JSON output schema:
       "description": <string>
     },
     "main_module": <int>,                    // index of module in modules list
-    "modules_contain_cert_info": true,       // optional
+    "modules_contains_cert_info": true,      // optional
     "modules": [
       // zero or more
       {
@@ -158,14 +158,14 @@ Rough JSON output schema:
         "filename": <string>,
         "code_id": <string>,
         "version": <string>,
-        "loaded_symbols": true,              // optional, if mdsw looked for the file and it does exist
-        "missing_symbols": true,             // optional, if mdsw looked for the file and it doesn't exist
-        "corrupt_symbols": true,             // optional, if mdsw found a file that has parse errors
-        "symbol_disk_cache_hit": <bool>,     // optional, whether or not the SYM file was fetched from disk cache
-        "symbols_fetch_time": <float>,       // optional, time in ms it took to fetch symbol file from url; omitted
+        "loaded_symbols": true,              // optional; if mdsw looked for the file and it does exist
+        "missing_symbols": true,             // optional; if mdsw looked for the file and it doesn't exist
+        "corrupt_symbols": true,             // optional; if mdsw found a file that has parse errors
+        "symbol_disk_cache_hit": <bool>,     // optional; whether or not the SYM file was fetched from disk cache
+        "symbols_fetch_time": <float>,       // optional; time in ms it took to fetch symbol file from url; omitted
                                              // if the symbol file was in disk cache
         "symbol_url": <string>,              // optional, url of symbol file
-        "cert_subject": ?                    // optional
+        "cert_subject": <string>             // optional; entity that signed the module
       }
     ],
     "pid": <int>,                            // pid of crashed process
@@ -175,7 +175,7 @@ Rough JSON output schema:
       {
         "frame_count": <int>,
         "frames_truncated": true,            // optional
-        "total_frames": <int>,               // if truncated, this is the original total; optional
+        "total_frames": <int>,               // optional; if truncated, this is the original total
         "last_error_value": <string>,        // optional
         "thread_name": <string>,             // optional
         "frames": [
@@ -187,13 +187,13 @@ Rough JSON output schema:
             "file": <string>,                // optional
             "line": <int>,                   // optional
             "offset": <string>,              // 0x[[:xdigit:]]+
-            "module_offset": <string>,       // 0x[[:xdigit:]]+ , optional
-            "function_offset": <string>      // 0x[[:xdigit:]]+ , optional
+            "module_offset": <string>,       // optional; 0x[[:xdigit:]]+
+            "function_offset": <string>      // optional; 0x[[:xdigit:]]+
             "missing_symbols": true,         // optional
             "corrupt_symbols": true,         // optional
             "trust": <string>,               // none | scan | cfi_scan | frame_pointer | cfi | context | prewalked
 
-            "registers": {                   // this section is frame 0 only, optional
+            "registers": {                   // optional; this section is frame 0 only
               // for each register
               <string>: <string>,            // name is a register name and is architecture-dependent;
                                              // value is 0x[[:xdigit:]]
@@ -239,15 +239,15 @@ Rough JSON output schema:
           "signature_string": <string>,      // optional
           "backtrace": <string>,             // optional
           "message2": <string>,              // optional
-          "thread": <string>,                // 0x[[:xdigit:]], optional
-          "dialog_mode": <string>,           // 0x[[:xdigit:]], optional
-          "abort_cause": <string>            // 0x[[:xdigit:]], optional
+          "thread": <string>,                // optional; 0x[[:xdigit:]]
+          "dialog_mode": <string>,           // optional; 0x[[:xdigit:]]
+          "abort_cause": <string>            // optional; 0x[[:xdigit:]]
         }
       ]
     },
 
     "sensitive": {
-      "exploitable": <string>                // low | medium | high | interesting | none | ERROR: *
+      "exploitability": <string>             // low | medium | high | interesting | none | ERROR: *
     }
   }
 
