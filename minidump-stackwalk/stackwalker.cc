@@ -98,6 +98,7 @@ using google_breakpad::StackFrameSymbolizer;
 using google_breakpad::Stackwalker;
 using google_breakpad::SymbolSupplier;
 using google_breakpad::SystemInfo;
+using google_breakpad::WinErrorToString;
 using breakpad_extra::HTTPSymbolSupplier;
 
 using std::map;
@@ -842,7 +843,17 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
     thread["frame_count"] = stack.size();
     auto last_error_value = raw_stack->last_error();
     if (last_error_value) {
-      thread["last_error_value"] = NTStatusToString(last_error_value);
+      char last_error_value_buff[11] = {};
+      const char* last_error_value_str = NTStatusToString(last_error_value);
+      if (last_error_value_str == nullptr) {
+        last_error_value_str = WinErrorToString(last_error_value);
+      }
+      if (last_error_value_str == nullptr) {
+        snprintf(last_error_value_buff, sizeof(last_error_value_buff), "%#010x",
+                 last_error_value);
+        last_error_value_str = last_error_value_buff;
+      }
+      thread["last_error_value"] = last_error_value_str;
     }
     auto thread_name = thread_id_name_map[raw_stack->tid()];
     if (!thread_name.empty()) {
