@@ -60,6 +60,7 @@
 #include "google_breakpad/processor/stackwalker.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
 #include "google_breakpad/processor/stack_frame_symbolizer.h"
+#include "processor/logging.h"
 #include "processor/pathname_stripper.h"
 #include "processor/simple_symbol_supplier.h"
 #include "processor/symbolic_constants_win.h"
@@ -124,6 +125,16 @@ const unsigned kTailFramesWhenTruncating = 10;
 static string ToHex(uint64_t value) {
   char buffer[32];
   sprintf(buffer, "0x%lx", value);
+  return buffer;
+}
+
+static string ToHexAddress(uint64_t value, int arch_bits) {
+  char buffer[32];
+  if (arch_bits == 32) {
+    sprintf(buffer, "0x%08lx", value);
+  } else {
+    sprintf(buffer, "0x%016lx", value);
+  }
   return buffer;
 }
 
@@ -652,7 +663,8 @@ int ConvertModulesToJSON(const ProcessState& process_state,
                          const StackFrameSymbolizerForward& symbolizer,
                          const HTTPSymbolSupplier* supplier,
                          const ModuleCertMap& cert_info,
-                         Json::Value& json) {
+                         Json::Value& json,
+                         int arch_bits) {
   const CodeModules* modules = process_state.modules();
   const vector<const CodeModule*>* modules_without_symbols =
     process_state.modules_without_symbols();
@@ -683,8 +695,9 @@ int ConvertModulesToJSON(const ProcessState& process_state,
     module_data["version"] = module->version();
     module_data["debug_file"] = PathnameStripper::File(module->debug_file());
     module_data["debug_id"] = module->debug_identifier();
-    module_data["base_addr"] = ToHex(module->base_address());
-    module_data["end_addr"] = ToHex(module->base_address() + module->size());
+    module_data["base_addr"] = ToHexAddress(module->base_address(), arch_bits);
+    module_data["end_addr"] = ToHexAddress(
+      module->base_address() + module->size(), arch_bits);
     if (ContainsModule(modules_without_symbols, module)) {
       module_data["missing_symbols"] = true;
     }
@@ -714,7 +727,8 @@ int ConvertModulesToJSON(const ProcessState& process_state,
 }
 
 static size_t ConvertUnloadedModulesToJSON(const ProcessState& aProcessState,
-                                           Json::Value& aNode) {
+                                           Json::Value& aNode,
+                                           int arch_bits) {
   const CodeModules* unloadedModules = aProcessState.unloaded_modules();
   if (!unloadedModules) {
     return 0;
@@ -729,9 +743,11 @@ static size_t ConvertUnloadedModulesToJSON(const ProcessState& aProcessState,
         PathnameStripper::File(unloadedModule->code_file());
     unloadedModuleNode["code_id"] =
         PathnameStripper::File(unloadedModule->code_identifier());
-    unloadedModuleNode["base_addr"] = ToHex(unloadedModule->base_address());
+    unloadedModuleNode["base_addr"] = ToHexAddress(
+        unloadedModule->base_address(), arch_bits);
     unloadedModuleNode["end_addr"] =
-        ToHex(unloadedModule->base_address() + unloadedModule->size());
+        ToHexAddress(unloadedModule->base_address() + unloadedModule->size(),
+            arch_bits);
 
     aNode.append(unloadedModuleNode);
   }
@@ -776,7 +792,8 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
                                       const StackFrameSymbolizerForward& symbolizer,
                                       const HTTPSymbolSupplier* supplier,
                                       Json::Value& root,
-                                      const Json::Value& raw_root) {
+                                      const Json::Value& raw_root,
+                                      int arch_bits) {
   // OS and CPU information.
   Json::Value system_info;
   system_info["os"] = process_state.system_info()->os;
@@ -791,7 +808,7 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
   int requesting_thread = process_state.requesting_thread();
   if (process_state.crashed()) {
     crash_info["type"] = process_state.crash_reason();
-    crash_info["address"] = ToHex(process_state.crash_address());
+    crash_info["address"] = ToHexAddress(process_state.crash_address(), arch_bits);
     if (requesting_thread != -1) {
       crash_info["crashing_thread"] = requesting_thread;
     }
@@ -850,7 +867,8 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
 
   Json::Value modules(Json::arrayValue);
   int main_module = ConvertModulesToJSON(process_state, symbolizer,
-                                         supplier, cert_info, modules);
+                                         supplier, cert_info, modules,
+                                         arch_bits);
   if (main_module != -1) {
     root["main_module"] = main_module;
   }
@@ -861,7 +879,7 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
 
   Json::Value unloaded_modules(Json::arrayValue);
   size_t unloaded_modules_len =
-      ConvertUnloadedModulesToJSON(process_state, unloaded_modules);
+      ConvertUnloadedModulesToJSON(process_state, unloaded_modules, arch_bits);
 
   if (unloaded_modules_len > 0) {
     root["unloaded_modules"] = unloaded_modules;
@@ -931,7 +949,8 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
 
 static void ConvertMemoryInfoToJSON(Minidump& dump,
                                     Json::Value& raw_root,
-                                    Json::Value& root)
+                                    Json::Value& root,
+                                    int arch_bits)
 {
   MinidumpMemoryInfoList* memory_info_list = dump.GetMemoryInfoList();
   if (!memory_info_list || !memory_info_list->valid()) {
@@ -976,7 +995,7 @@ static void ConvertMemoryInfoToJSON(Minidump& dump,
     }
   }
 
-  root["largest_free_vm_block"] = ToHex(largest_free_block);
+  root["largest_free_vm_block"] = ToHexAddress(largest_free_block, arch_bits);
   root["write_combine_size"] = ToInt(write_combine_size);
   root["tiny_block_size"] = ToInt(tiny_block_size);
 
@@ -1411,8 +1430,21 @@ int main(int argc, char** argv)
   StackFrameSymbolizerForward symbolizer(symbol_supplier.get(), &resolver);
   MinidumpProcessor minidump_processor(&symbolizer, true);
   ProcessState process_state;
+
   ProcessResult result =
     minidump_processor.Process(&minidump, &process_state);
+
+  int arch_bits = 64;
+  if (result == google_breakpad::PROCESS_OK) {
+    if (process_state.system_info()->cpu == "x86") {
+      arch_bits = 32;
+    } else {
+      arch_bits = 64;
+    }
+    BPLOG(INFO) << process_state.system_info()->cpu << ": " << arch_bits << "-bit arch\n";
+  } else {
+    BPLOG(ERROR) << "processing failed; defaulting to 64-bit arch\n";
+  }
 
   if (pipe) {
     if (result == google_breakpad::PROCESS_OK) {
@@ -1432,9 +1464,9 @@ int main(int argc, char** argv)
   root["sensitive"] = Json::Value(Json::objectValue);
   if (result == google_breakpad::PROCESS_OK) {
     ConvertProcessStateToJSON(process_state, symbolizer,
-                              http_symbol_supplier, root, raw_root);
+                              http_symbol_supplier, root, raw_root, arch_bits);
   }
-  ConvertMemoryInfoToJSON(minidump, raw_root, root);
+  ConvertMemoryInfoToJSON(minidump, raw_root, root, arch_bits);
 
   // Get the PID.
   MinidumpMiscInfo* misc_info = minidump.GetMiscInfo();
