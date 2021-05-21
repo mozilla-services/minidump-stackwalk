@@ -15,6 +15,9 @@ minidump-stackwalk/dumplookup
 minidump-stackwalk/get-minidump-instructions
 minidump-stackwalk/jit-crash-categorize
 dist/
+tmp/
+crashdata_mdsw_tmp/
+outdir/
 
 # docker things
 .docker-build*

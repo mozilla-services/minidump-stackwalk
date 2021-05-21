@@ -16,8 +16,9 @@
 
 set -euxo pipefail
 
-DATADIR=./crashdata_mdsw_tmp
-OUTPUTDIR=./outdir
+DATADIR="/app/crashdata_mdsw_tmp"
+OUTPUTDIR="/app/outdir"
+SYMBOLS_TMP="/app/tmp"
 SYMBOLS_URL="https://symbols.mozilla.org/"
 STACKWALKER_PATH="/stackwalk/stackwalker"
 
@@ -37,9 +38,10 @@ if [ ! -d "${DATADIR}" ]; then
     exit 1
 fi
 
-mkdir -p /tmp/symbols/cache || true
-mkdir -p /tmp/symbols/tmp || true
-mkdir -p ${OUTPUTDIR} || true
+echo "Using ${SYMBOLS_TMP} for tmp and cache"
+mkdir -p "${SYMBOLS_TMP}/cache" || true
+mkdir -p "${SYMBOLS_TMP}/tmp" || true
+mkdir -p "${OUTPUTDIR}" || true
 
 for CRASHID in "$@"
 do
@@ -50,7 +52,7 @@ do
     timeout -s KILL 600 "${STACKWALKER_PATH}" \
         --raw-json ${RAWCRASHFILE} \
         --symbols-url "${SYMBOLS_URL}" \
-        --symbols-cache /tmp/symbols/cache \
-        --symbols-tmp /tmp/symbols/tmp \
+        --symbols-cache "${SYMBOLS_TMP}/cache" \
+        --symbols-tmp "${SYMBOLS_TMP}/tmp" \
         ${DUMPFILE} > ${OUTPUTDIR}/${CRASHID}.json
 done
