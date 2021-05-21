@@ -1,9 +1,17 @@
+---
 version: "2"
 services:
   app:
     build:
       context: .
     image: local/socorro-minidump-stackwalk
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+
+  current:
+    image: mozilla/socorro-minidump-stackwalk:latest
     env_file:
       - .env
     volumes:

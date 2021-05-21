@@ -31,7 +31,7 @@ help:
 	    | sed -n 's/^\(.*\): \(.*\)##\(.*\)/\1\3/p' \
 	    | column -t  -s '|'
 	@echo ""
-	@echo "See https://socorro.readthedocs.io/ for more documentation."
+	@echo "See https://github.com/mozilla-services/minidump-stackwalk/ for more documentation."
 
 .env:
 	@if [ ! -f .env ]; \
@@ -56,6 +56,7 @@ shell: .env .docker-build  ## | Open a shell in the app container.
 clean:  ## | Remove all build artifacts.
 	-rm .docker-build*
 	./bin/clean_artifacts.sh
+	-rm -rf tmp
 
 sizeof: .env .docker-build  ## | Size of minidump_stackwalker docker image.
 	docker images | grep minidump
