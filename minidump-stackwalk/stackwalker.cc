@@ -995,7 +995,7 @@ static void ConvertMemoryInfoToJSON(Minidump& dump,
     }
   }
 
-  root["largest_free_vm_block"] = ToHexAddress(largest_free_block, arch_bits);
+  root["largest_free_vm_block"] = ToInt(largest_free_block);
   root["write_combine_size"] = ToInt(write_combine_size);
   root["tiny_block_size"] = ToInt(tiny_block_size);
 
