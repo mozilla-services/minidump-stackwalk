@@ -1424,8 +1424,6 @@ int main(int argc, char** argv)
 
   minidump.Read();
 
-  int minidump_width = determine_minidump_width(&minidump);
-
   // process minidump
   // bug 950710 - Bad symbol files are causing the stackwalker to
   // run amok. Disabling this until we get an upstream fix.
@@ -1451,6 +1449,11 @@ int main(int argc, char** argv)
 
   ProcessResult result =
     minidump_processor.Process(&minidump, &process_state);
+
+  int minidump_width = 64;
+  if (result == google_breakpad::PROCESS_OK) {
+    minidump_width = determine_minidump_width(&minidump);
+  }
 
   if (pipe) {
     if (result == google_breakpad::PROCESS_OK) {
