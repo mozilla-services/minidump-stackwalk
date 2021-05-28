@@ -81,6 +81,7 @@ using google_breakpad::MinidumpMemoryInfoList;
 using google_breakpad::MinidumpMiscInfo;
 using google_breakpad::MinidumpModule;
 using google_breakpad::MinidumpProcessor;
+using google_breakpad::MinidumpSystemInfo;
 using google_breakpad::NTStatusToString;
 using google_breakpad::PathnameStripper;
 using google_breakpad::ProcessResult;
@@ -1330,10 +1331,8 @@ static void PrintProcessStateMachineReadable(const ProcessState& process_state)
 
 //*** End of copy-paste from minidump_stackwalk.cc ***
 
-int determine_minidump_width(Minidump *minidump) {
-  const MDRawSystemInfo *system_info = minidump->GetSystemInfo()->system_info();
-
-  switch (system_info->processor_architecture) {
+int determine_minidump_width(uint16_t arch) {
+  switch (arch) {
   case MD_CPU_ARCHITECTURE_X86:
     return 32;
   case MD_CPU_ARCHITECTURE_ARM:
@@ -1451,8 +1450,9 @@ int main(int argc, char** argv)
     minidump_processor.Process(&minidump, &process_state);
 
   int minidump_width = 64;
-  if (result == google_breakpad::PROCESS_OK) {
-    minidump_width = determine_minidump_width(&minidump);
+  MinidumpSystemInfo* minidump_system_info = minidump.GetSystemInfo();
+  if (minidump_system_info && minidump_system_info->system_info()) {
+    minidump_width = determine_minidump_width(minidump_system_info->system_info()->processor_architecture);
   }
 
   if (pipe) {
