@@ -1,4 +1,4 @@
-From e7247f5a289374e3fa30343d3bb153dd42f4bb28 Mon Sep 17 00:00:00 2001
+From c0d5d72525b8fba77a00d49b69b40ac20de34c0d Mon Sep 17 00:00:00 2001
 From: Gabriele Svelto <gsvelto@mozilla.com>
 Date: Wed, 19 May 2021 15:00:58 +0200
 Subject: [PATCH] Print out all error codes from winerror.h and store the
@@ -6,10 +6,10 @@ Subject: [PATCH] Print out all error codes from winerror.h and store the
 
 ---
  .../common/minidump_exception_win32.h         |  2642 +++
- src/processor/minidump_processor.cc           |    19 +-
+ src/processor/minidump_processor.cc           |    29 +-
  src/processor/symbolic_constants_win.cc       | 19267 +++++++++-------
  src/processor/symbolic_constants_win.h        |    15 +-
- 4 files changed, 13575 insertions(+), 8368 deletions(-)
+ 4 files changed, 13584 insertions(+), 8369 deletions(-)
 
 diff --git a/src/google_breakpad/common/minidump_exception_win32.h b/src/google_breakpad/common/minidump_exception_win32.h
 index d12df717..159f53f6 100644
@@ -2668,7 +2668,7 @@ index d12df717..159f53f6 100644
 +
  #endif  /* GOOGLE_BREAKPAD_COMMON_MINIDUMP_EXCEPTION_WIN32_H__ */
 diff --git a/src/processor/minidump_processor.cc b/src/processor/minidump_processor.cc
-index 96ad23ca..2f49638a 100644
+index 96ad23ca..1554da1c 100644
 --- a/src/processor/minidump_processor.cc
 +++ b/src/processor/minidump_processor.cc
 @@ -1235,17 +1235,23 @@ string MinidumpProcessor::GetCrashReason(Minidump* dump, uint64_t* address) {
@@ -2696,7 +2696,31 @@ index 96ad23ca..2f49638a 100644
          case MD_EXCEPTION_CODE_WIN_ILLEGAL_INSTRUCTION:
            reason = "EXCEPTION_ILLEGAL_INSTRUCTION";
            break;
-@@ -1313,19 +1319,24 @@ string MinidumpProcessor::GetCrashReason(Minidump* dump, uint64_t* address) {
+@@ -1298,34 +1304,47 @@ string MinidumpProcessor::GetCrashReason(Minidump* dump, uint64_t* address) {
+           reason = "EXCEPTION_POSSIBLE_DEADLOCK";
+           break;
+         case MD_NTSTATUS_WIN_STATUS_STACK_BUFFER_OVERRUN:
+           reason = "STATUS_STACK_BUFFER_OVERRUN";
+             if (raw_exception->exception_record.number_parameters > 0) {
+             uint32_t fast_fail_code =
+                 static_cast<uint32_t>
+                 (raw_exception->exception_record.exception_information[0]);
++            char fast_fail_buff[11] = {};
++            const char* fast_fail_string = FastFailToString(fast_fail_code);
++            if (!fast_fail_string) {
++              snprintf(fast_fail_buff, sizeof(fast_fail_buff), "%#010x",
++                       fast_fail_code);
++              fast_fail_string = fast_fail_buff;
++            }
++
+             reason.append(" / ");
+-            reason.append(FastFailToString(fast_fail_code));
++            reason.append(fast_fail_string);
+           }
+ 
+           break;
+         case MD_EXCEPTION_OUT_OF_MEMORY:
+           reason = "Out of Memory";
            break;
          case MD_EXCEPTION_CODE_WIN_UNHANDLED_CPP_EXCEPTION:
            reason = "Unhandled C++ Exception";
@@ -22061,5 +22085,5 @@ index 9e240dd1..5b715267 100644
  
  #endif  // GOOGLE_BREAKPAD_PROCESSOR_SYMBOLIC_CONSTANTS_WIN_H_
 -- 
-2.26.3
+2.31.1
 
