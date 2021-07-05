@@ -917,7 +917,11 @@ static void ConvertProcessStateToJSON(const ProcessState& process_state,
       }
       thread["last_error_value"] = last_error_value_str;
     }
-    auto thread_name = thread_id_name_map[raw_stack->tid()];
+    auto thread_name = raw_stack->name();
+    if (thread_name.empty()) {
+      thread_name = thread_id_name_map[raw_stack->tid()];
+    }
+
     if (!thread_name.empty()) {
       thread["thread_name"] = thread_name;
     }
