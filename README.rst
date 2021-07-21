@@ -5,6 +5,14 @@ minidump-stackwalker
 This repo holds the stackwalker binaries that parse minidump files that Socorro
 uses.
 
+This minidump-stackwalk differs from the Breakpad stackwalk binary in a few
+major ways:
+
+1. it includes patches we use for the breakpad library we use to build the
+   crash reporter
+2. it supports multiple HTTP symbol suppliers
+3. it can output JSON
+
 
 Docker images
 =============
@@ -279,15 +287,15 @@ To trigger building a release image:
 
 1. Run ``python bin/release.py make-tag``
 
-   I run this Python 3.8 on my host--not in the Docker container shell. This
-   should work with Python 3.6 and higher.
+   I run this with Python 3.8 on my host--not in the Docker container shell.
+   This script should work with Python 3.6 and higher.
 
-   This uses ``git`` to look at the repository state, so that needs to be
+   The script uses ``git`` to look at the repository state, so git needs to be
    installed. Make sure your ``main`` branch is up to date with what's on
    GitHub.
 
-   In order for this to work, you need to have authority to push tags
-   to GitHub.
+   In order for this to work, you need to have authority to push tags to
+   GitHub.
 
    This will look at the previous tag, figure out what's changed since then,
    generate a tag name, generate a tag comment, create the tag, and push the
