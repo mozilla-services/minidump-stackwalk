@@ -23,11 +23,11 @@ export MAKEFLAGS
 MAKEFLAGS=-j$(getconf _NPROCESSORS_ONLN)
 
 if [ ! -d "depot_tools" ]; then
-  git clone --depth=1 --single-branch https://chromium.googlesource.com/chromium/tools/depot_tools.git
+  git clone --depth=1 --single-branch --branch main https://chromium.googlesource.com/chromium/tools/depot_tools.git
 fi
 
 cd depot_tools || exit
-git pull origin master
+git pull origin main
 echo ">>> using depot_tools version: $(git rev-parse HEAD)"
 cd ..
 
